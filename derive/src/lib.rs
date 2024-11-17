@@ -14,6 +14,23 @@ use syn::{
   PathArguments, Type,
 };
 
+/// Allows derivation of a builder pattern on any struct
+///
+/// # Examples
+///
+/// ```rust,no-run
+/// use crate::Builder;
+///
+/// #[derive(Builder)]
+/// struct Data {
+///   field: usize
+/// }
+///
+/// fn main() {
+///   let data = Data::builder().with_field(42).build();
+///   assert_eq!(data, Data { field: 42 });
+/// }
+/// ```
 #[proc_macro_derive(Builder, attributes(builder))]
 pub fn builder(input: TokenStream) -> TokenStream {
   // Parse the input tokens into a syntax tree
@@ -222,7 +239,7 @@ pub fn builder(input: TokenStream) -> TokenStream {
   TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(Getters)]
+#[proc_macro_derive(Getters, attributes(getters))]
 pub fn getters(input: TokenStream) -> TokenStream {
   // Parse the input tokens into a syntax tree
   let input = parse_macro_input!(input as DeriveInput);
@@ -234,6 +251,39 @@ pub fn getters(input: TokenStream) -> TokenStream {
     Err(e) => return e.into(),
   };
 
+  let mut field_skips: Vec<Ident> = vec![];
+  for field in &orig_fields.named {
+    for attr in &field.attrs {
+      if attr.path().is_ident("getters") {
+        let nested = attr
+          .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
+          .unwrap();
+        for meta in nested {
+          match meta {
+            Meta::NameValue(meta_name_value) => {
+              if meta_name_value.path.is_ident("skip") {
+                return quote_spanned! {
+                  attr.path().span() => compile_error!("`skip` attribute on `Getters` derive macro cannot have a value")
+                }.into();
+              }
+            }
+            Meta::Path(path) => {
+              if path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+            Meta::List(list) => {
+              if list.path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   let field_accessors = orig_fields
     .named
     .iter()
@@ -258,18 +308,22 @@ pub fn getters(input: TokenStream) -> TokenStream {
         None => quote! {#field_ty},
       };
 
-      if is_option(&field_ty) {
-        quote! {
-          pub fn #ref_func_name(&self) -> Option<&#unwrapped_field_ty> {
-            self.#field_name.as_ref()
+      if !field_skips.contains(&field_name) {
+        if is_option(&field_ty) {
+          quote! {
+            pub fn #ref_func_name(&self) -> Option<&#unwrapped_field_ty> {
+              self.#field_name.as_ref()
+            }
+          }
+        } else {
+          quote! {
+            pub fn #ref_func_name(&self) -> &#field_ty {
+              &self.#field_name
+            }
           }
         }
       } else {
-        quote! {
-          pub fn #ref_func_name(&self) -> &#field_ty {
-            &self.#field_name
-          }
-        }
+        quote! {}
       }
     })
     .collect::<proc_macro2::TokenStream>();
@@ -285,7 +339,7 @@ pub fn getters(input: TokenStream) -> TokenStream {
   TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(Setters)]
+#[proc_macro_derive(Setters, attributes(setters))]
 pub fn setters(input: TokenStream) -> TokenStream {
   // Parse the input tokens into a syntax tree
   let input = parse_macro_input!(input as DeriveInput);
@@ -297,6 +351,40 @@ pub fn setters(input: TokenStream) -> TokenStream {
     Err(e) => return e.into(),
   };
 
+  let mut field_skips: Vec<Ident> = vec![];
+  for field in &orig_fields.named {
+    for attr in &field.attrs {
+      if attr.path().is_ident("setters") {
+        let nested = attr
+          .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
+          .unwrap();
+        for meta in nested {
+          match meta {
+            Meta::NameValue(meta_name_value) => {
+              if meta_name_value.path.is_ident("skip") {
+                return quote_spanned! {
+                  attr.path().span() => compile_error!("`skip` attribute on `Setters` derive macro cannot have a value")
+                }.into();
+              }
+            }
+            Meta::Path(path) => {
+              if path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+            Meta::List(list) => {
+              if list.path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   let field_accessors = orig_fields
     .named
     .iter()
@@ -306,38 +394,42 @@ pub fn setters(input: TokenStream) -> TokenStream {
       let ref_mut_func_name = Ident::new(&format!("{}_mut", field_name.clone()), f.span());
       let set_func_name = Ident::new(&format!("set_{}", field_name.clone()), f.span());
       let with_func_name = Ident::new(&format!("with_{}", field_name.clone()), f.span());
-      if is_option(&field_ty) {
-        quote! {
-          pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
-            &mut self.#field_name
-          }
+      if !field_skips.contains(&field_name) {
+        if is_option(&field_ty) {
+          quote! {
+            pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
+              &mut self.#field_name
+            }
 
-          pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
-            self.#field_name = v;
-            self
-          }
+            pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
+              self.#field_name = v;
+              self
+            }
 
-          pub fn #with_func_name(mut self, v: #field_ty) -> Self {
-            self.#field_name = v;
-            self
+            pub fn #with_func_name(mut self, v: #field_ty) -> Self {
+              self.#field_name = v;
+              self
+            }
+          }
+        } else {
+          quote! {
+            pub fn #ref_mut_func_name(&self) -> &#field_ty {
+              &self.#field_name
+            }
+
+            pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
+              self.#field_name = v;
+              self
+            }
+
+            pub fn #with_func_name(mut self, v: #field_ty) -> Self {
+              self.#field_name = v;
+              self
+            }
           }
         }
       } else {
-        quote! {
-          pub fn #ref_mut_func_name(&self) -> &#field_ty {
-            &self.#field_name
-          }
-
-          pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
-            self.#field_name = v;
-            self
-          }
-
-          pub fn #with_func_name(mut self, v: #field_ty) -> Self {
-            self.#field_name = v;
-            self
-          }
-        }
+        quote! {}
       }
     })
     .collect::<proc_macro2::TokenStream>();
@@ -353,24 +445,7 @@ pub fn setters(input: TokenStream) -> TokenStream {
   TokenStream::from(expanded)
 }
 
-/// Allows derivation of a builder pattern on any struct
-///
-/// # Examples
-///
-/// ```rust,no-run
-/// use crate::Builder;
-///
-/// #[derive(Builder)]
-/// struct Data {
-///   field: usize
-/// }
-///
-/// fn main() {
-///   let data = Data::builder().with_field(42).build();
-///   assert_eq!(data, Data { field: 42 });
-/// }
-/// ```
-#[proc_macro_derive(Fields)]
+#[proc_macro_derive(Fields, attributes(fields))]
 pub fn fields(input: TokenStream) -> TokenStream {
   // Parse the input tokens into a syntax tree
   let input = parse_macro_input!(input as DeriveInput);
@@ -382,6 +457,39 @@ pub fn fields(input: TokenStream) -> TokenStream {
     Err(e) => return e.into(),
   };
 
+  let mut field_skips: Vec<Ident> = vec![];
+  for field in &orig_fields.named {
+    for attr in &field.attrs {
+      if attr.path().is_ident("fields") {
+        let nested = attr
+          .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
+          .unwrap();
+        for meta in nested {
+          match meta {
+            Meta::NameValue(meta_name_value) => {
+              if meta_name_value.path.is_ident("skip") {
+                return quote_spanned! {
+                  attr.path().span() => compile_error!("`skip` attribute on `Fields` derive macro cannot have a value")
+                }.into();
+              }
+            }
+            Meta::Path(path) => {
+              if path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+            Meta::List(list) => {
+              if list.path.is_ident("skip") {
+                let field_name = field.ident.clone().unwrap();
+                field_skips.push(field_name.clone());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   let field_accessors = orig_fields
     .named
     .iter()
@@ -409,54 +517,58 @@ pub fn fields(input: TokenStream) -> TokenStream {
         None => quote! {#field_ty},
       };
 
-      if is_option(&field_ty) {
-        quote! {
-          #[doc = concat!("Return the `", stringify!(#field_name), "` field as a mutable reference.")]
-          pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
-            &mut self.#field_name
-          }
+      if !field_skips.contains(&field_name) {
+        if is_option(&field_ty) {
+          quote! {
+            #[doc = concat!("Return the `", stringify!(#field_name), "` field as a mutable reference.")]
+            pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
+              &mut self.#field_name
+            }
 
-          #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
-          pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
-            self.#field_name = v;
-            self
-          }
+            #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
+            pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
+              self.#field_name = v;
+              self
+            }
 
-          #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
-          pub fn #with_func_name(mut self, v: #field_ty) -> Self {
-            self.#field_name = v;
-            self
-          }
+            #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
+            pub fn #with_func_name(mut self, v: #field_ty) -> Self {
+              self.#field_name = v;
+              self
+            }
 
-          #[doc = concat!("Return the `", stringify!(#field_name), "` field.")]
-          pub fn #ref_func_name(&self) -> Option<&#unwrapped_field_ty> {
-            self.#field_name.as_ref()
+            #[doc = concat!("Return the `", stringify!(#field_name), "` field.")]
+            pub fn #ref_func_name(&self) -> Option<&#unwrapped_field_ty> {
+              self.#field_name.as_ref()
+            }
+          }
+        } else {
+          quote! {
+            #[doc = concat!("Retrieve the `", stringify!(#field_name), "` field as a mutable reference.")]
+            pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
+              &mut self.#field_name
+            }
+
+            #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
+            pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
+              self.#field_name = v;
+              self
+            }
+
+            #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
+            pub fn #with_func_name(mut self, v: #field_ty) -> Self {
+              self.#field_name = v;
+              self
+            }
+
+            #[doc = concat!("Retrieve the `", stringify!(#field_name), "` field as a reference.")]
+            pub fn #ref_func_name(&self) -> &#field_ty {
+              &self.#field_name
+            }
           }
         }
       } else {
-        quote! {
-          #[doc = concat!("Retrieve the `", stringify!(#field_name), "` field as a mutable reference.")]
-          pub fn #ref_mut_func_name(&mut self) -> &mut #field_ty {
-            &mut self.#field_name
-          }
-
-          #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
-          pub fn #set_func_name(&mut self, v: #field_ty) -> &mut Self {
-            self.#field_name = v;
-            self
-          }
-
-          #[doc = concat!("Define the `", stringify!(#field_name), "` field.")]
-          pub fn #with_func_name(mut self, v: #field_ty) -> Self {
-            self.#field_name = v;
-            self
-          }
-
-          #[doc = concat!("Retrieve the `", stringify!(#field_name), "` field as a reference.")]
-          pub fn #ref_func_name(&self) -> &#field_ty {
-            &self.#field_name
-          }
-        }
+        quote!{}
       }
     })
     .collect::<proc_macro2::TokenStream>();
@@ -535,7 +647,7 @@ pub fn ctor(input: TokenStream) -> TokenStream {
     Err(e) => return e.into(),
   };
 
-  let mut field_skips: HashMap<Ident, proc_macro2::TokenStream> = HashMap::from_iter(
+  let field_skips: HashMap<Ident, proc_macro2::TokenStream> = HashMap::from_iter(
     orig_fields
       .named
       .iter()

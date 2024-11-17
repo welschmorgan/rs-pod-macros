@@ -5,6 +5,8 @@ struct Data {
   pub field0: usize,
   pub field1: f32,
   pub field2: Option<usize>,
+  #[fields(skip)]
+  pub field3: (),
 }
 
 fn main() {
@@ -12,6 +14,7 @@ fn main() {
     field0: 42,
     field1: 0f32,
     field2: Some(84),
+    field3: (),
   };
   data.field0_mut();
   data.set_field0(*data.field0() + 1);
@@ -22,7 +25,8 @@ fn main() {
     Data {
       field0: 43,
       field1: -1f32,
-      field2: Some(12)
+      field2: Some(12),
+      field3: (),
     }
   );
   println!("{:?}", data);
