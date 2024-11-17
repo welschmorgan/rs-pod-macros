@@ -1,0 +1,17 @@
+[package]
+name = "pod-derive"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Automatically implement getters/setters for a POD-like struct"
+
+[lib]
+name = "pod_derive"
+proc-macro = true
+
+[dependencies]
+pod-internal = { path = "../internal" }
+syn = { version = "2.0.87", features = ["parsing"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+convert_case = "0.6.0"
