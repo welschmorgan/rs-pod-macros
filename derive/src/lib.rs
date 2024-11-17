@@ -18,10 +18,11 @@ use syn::{
 ///
 /// # Examples
 ///
-/// ```rust,no-run
-/// use crate::Builder;
+/// ```rust
+/// use podstru_derive::Builder;
+/// use podstru_internal::Builder;
 ///
-/// #[derive(Builder)]
+/// #[derive(Builder, Debug, PartialEq)]
 /// struct Data {
 ///   field: usize
 /// }
