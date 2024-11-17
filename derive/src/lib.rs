@@ -218,7 +218,7 @@ pub fn builder(input: TokenStream) -> TokenStream {
           }
         }
 
-        impl pod_internal::Builder for #in_name {
+        impl podstru_internal::Builder for #in_name {
           type Target = #builder_ty;
 
           fn builder() -> Self::Target {
@@ -691,7 +691,6 @@ pub fn ctor(input: TokenStream) -> TokenStream {
                     }))
                   }
                 }
-                _ => {}
               }
             }
           }

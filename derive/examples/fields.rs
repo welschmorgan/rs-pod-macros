@@ -1,4 +1,4 @@
-use pod_derive::Fields;
+use podstru_derive::Fields;
 
 #[derive(Fields, Debug, PartialEq)]
 struct Data {

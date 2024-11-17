@@ -13,7 +13,7 @@ It currently supports the following:
 
 ## Crates structure
 
-3 craves are available:
+3 crates are available:
 
 - internal - this provides the traits used by the derive macros
 - derive - the derive macros

@@ -1,4 +1,4 @@
-use pod_derive::Ctor;
+use podstru_derive::Ctor;
 use std::fmt::Debug;
 
 #[derive(Ctor, Debug, PartialEq)]

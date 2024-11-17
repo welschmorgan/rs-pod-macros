@@ -1,4 +1,4 @@
-use pod_derive::Getters;
+use podstru_derive::Getters;
 
 #[derive(Getters, Debug)]
 struct Data {

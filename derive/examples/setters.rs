@@ -1,4 +1,4 @@
-use pod_derive::Setters;
+use podstru_derive::Setters;
 
 #[derive(Setters, Debug, PartialEq)]
 struct Data {

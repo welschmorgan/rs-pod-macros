@@ -1,17 +1,17 @@
 [package]
-name = "pod"
+name = "podstru"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 description = "Bureaucratic structs to speed up rust development"
 
 [lib]
-name = "pod"
+name = "podstru"
 
 [features]
 default = []
-derive = ["dep:pod-derive"]
+derive = ["dep:podstru-derive"]
 
 [dependencies]
-pod-internal = { path = "../internal" }
-pod-derive = { path = "../derive", optional = true }
+podstru-internal = { path = "../internal" }
+podstru-derive = { path = "../derive", optional = true }
