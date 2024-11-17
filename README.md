@@ -18,3 +18,15 @@ It currently supports the following:
 - internal - this provides the traits used by the derive macros
 - derive - the derive macros
 - public - the reexported traits and derive macros
+
+## Examples
+
+- [builder](examples/builder.rs)
+- [ctor](examples/ctor.rs)
+- [fields](examples/fields.rs)
+- [getters](examples/getters.rs)
+- [setters](examples/setters.rs)
+
+## Authors
+
+- Morgan Welsch
