@@ -3,6 +3,9 @@ name = "podstru-derive"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
+keywords.workspace = true
+license-file.workspace = true
+repository.workspace = true
 description = "Automatically implement getters/setters for a POD-like struct"
 
 [lib]
@@ -10,7 +13,7 @@ name = "podstru_derive"
 proc-macro = true
 
 [dependencies]
-podstru-internal = { path = "../internal" }
+podstru-internal = { path = "../internal", version = "0.1.0" }
 syn = { version = "2.0.87", features = ["parsing"] }
 quote = "1.0"
 proc-macro2 = "1.0"

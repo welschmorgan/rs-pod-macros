@@ -3,6 +3,9 @@ name = "podstru-internal"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
+keywords.workspace = true
+license-file.workspace = true
+repository.workspace = true
 description = "Bureaucratic structs to speed up rust development"
 
 [lib]
