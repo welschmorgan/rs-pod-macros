@@ -1,5 +1,5 @@
-use pod_derive::Builder;
-use pod_internal::Builder;
+use podstru_derive::Builder;
+use podstru_internal::Builder;
 use std::fmt::Debug;
 
 #[derive(Builder, Debug)]

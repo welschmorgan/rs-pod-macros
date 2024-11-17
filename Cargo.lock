@@ -12,26 +12,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "pod"
+name = "podstru"
 version = "0.1.0"
 dependencies = [
- "pod-derive",
- "pod-internal",
+ "podstru-derive",
+ "podstru-internal",
 ]
 
 [[package]]
-name = "pod-derive"
+name = "podstru-derive"
 version = "0.1.0"
 dependencies = [
  "convert_case",
- "pod-internal",
+ "podstru-internal",
  "proc-macro2",
  "quote",
  "syn",
 ]
 
 [[package]]
-name = "pod-internal"
+name = "podstru-internal"
 version = "0.1.0"
 
 [[package]]
