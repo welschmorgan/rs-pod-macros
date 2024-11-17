@@ -10,3 +10,11 @@ It currently supports the following:
 - Generating field getters via the `Getters` derive macro
 - Generating field setters *AND* getters via the `Fields` derive macro
 - Generating `new` constructor via the `Ctor` derive macro
+
+## Crates structure
+
+3 craves are available:
+
+- internal - this provides the traits used by the derive macros
+- derive - the derive macros
+- public - the reexported traits and derive macros

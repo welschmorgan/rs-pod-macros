@@ -1,5 +1,5 @@
 [workspace]
-members = ["internal", "derive", "core"]
+members = ["internal", "derive", "public"]
 resolver = "2"
 
 [workspace.package]
