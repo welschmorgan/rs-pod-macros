@@ -6,6 +6,7 @@ edition.workspace = true
 keywords.workspace = true
 license-file.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "Bureaucratic structs to speed up rust development"
 
 [lib]
@@ -16,5 +17,5 @@ default = []
 derive = ["dep:podstru-derive"]
 
 [dependencies]
-podstru-internal = { path = "../internal", version = "0.1.0" }
-podstru-derive = { path = "../derive", version = "0.1.0", optional = true }
+podstru-internal = { path = "../internal", version = "0.1.1" }
+podstru-derive = { path = "../derive", version = "0.1.1", optional = true }

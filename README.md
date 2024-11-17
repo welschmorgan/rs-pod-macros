@@ -1,6 +1,6 @@
 # POD
 
-[![Apache License](https://img.shields.io/badge/license-Apache%202.0-orange.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0) [![Crates.io](https://img.shields.io/crates/v/podstru.svg?style=flat-square)]() [![rust](https://img.shields.io/badge/rust-1.78.0%20stable-blue.svg?style=flat-square)]() [![release](https://img.shields.io/badge/release-0.1.0-darkgreen.svg?style=flat-square)]()
+[![Apache License](https://img.shields.io/badge/license-Apache%202.0-orange.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0) [![Crates.io](https://img.shields.io/crates/v/podstru.svg?style=flat-square)]() [![rust](https://img.shields.io/badge/rust-1.78.0%20stable-blue.svg?style=flat-square)]() [![release](https://img.shields.io/badge/release-0.1.1-darkgreen.svg?style=flat-square)]()
 
 The `pod` crate supports auto-generating the most basic operations on pod-like structs.
 It alleviates the burden of having to write bureaucratic funcs and patterns.

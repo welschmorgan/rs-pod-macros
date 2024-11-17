@@ -6,6 +6,7 @@ authors.workspace = true
 keywords.workspace = true
 license-file.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "Automatically implement getters/setters for a POD-like struct"
 
 [lib]
@@ -13,7 +14,7 @@ name = "podstru_derive"
 proc-macro = true
 
 [dependencies]
-podstru-internal = { path = "../internal", version = "0.1.0" }
+podstru-internal = { path = "../internal", version = "0.1.1" }
 syn = { version = "2.0.87", features = ["parsing"] }
 quote = "1.0"
 proc-macro2 = "1.0"

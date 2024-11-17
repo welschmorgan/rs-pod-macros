@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "podstru"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "podstru-derive",
  "podstru-internal",
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "podstru-derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "convert_case",
  "podstru-internal",
@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "podstru-internal"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "proc-macro2"
