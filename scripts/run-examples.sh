@@ -27,7 +27,7 @@ function build {
 }
 
 function build_example {
-  RUSTFLAGS=-Awarnings cargo b --example "$1" # &>"$BUILD_FILE"
+  RUSTFLAGS=-Awarnings cargo r --example "$1" # &>"$BUILD_FILE"
   STATUS=$?
   return $STATUS
 }

@@ -522,3 +522,113 @@ fn validate_struct(data: &Data) -> Result<&FieldsNamed, proc_macro2::TokenStream
     }
   })
 }
+
+#[proc_macro_derive(Ctor, attributes(ctor))]
+pub fn ctor(input: TokenStream) -> TokenStream {
+  // Parse the input tokens into a syntax tree
+  let input = parse_macro_input!(input as DeriveInput);
+
+  let in_ty = input.ident;
+
+  let orig_fields = match validate_struct(&input.data) {
+    Ok(fields) => fields,
+    Err(e) => return e.into(),
+  };
+
+  let mut field_skips: HashMap<Ident, proc_macro2::TokenStream> = HashMap::from_iter(
+    orig_fields
+      .named
+      .iter()
+      .flat_map(|f| {
+        f.attrs.iter().find_map(move |attr| {
+          if attr.path().is_ident("ctor") {
+            let nested = attr
+              .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
+              .unwrap();
+            let field_name = f.ident.clone().unwrap();
+            for meta in nested {
+              match meta {
+                Meta::NameValue(meta_name_value) => {
+                  if meta_name_value.path.is_ident("skip") {
+                    println!(
+                      "[{}] {} = {}",
+                      f.ident.clone().to_token_stream().to_string(),
+                      meta_name_value.path.to_token_stream().to_string(),
+                      meta_name_value.value.to_token_stream().to_string()
+                    );
+                    let field_value = meta_name_value.value.to_token_stream();
+                    return Some((
+                      field_name.clone(),
+                      quote! {
+                        #field_value
+                      },
+                    ));
+                  }
+                }
+                Meta::Path(path) => {
+                  if path.is_ident("skip") {
+                    return Some((field_name.clone(), quote_spanned! {
+                      path.span() => compile_error!("`skip` attribute on `Ctor` derive macro must have a value: the default value of the skipped field")
+                    }))
+                  }
+                }
+                Meta::List(list) => {
+                  if list.path.is_ident("skip") {
+                    return Some((field_name.clone(), quote_spanned! {
+                      list.span() => compile_error!("`skip` attribute on `Ctor` derive macro must have a value: the default value of the skipped field")
+                    }))
+                  }
+                }
+                _ => {}
+              }
+            }
+          }
+          None
+        })
+      })
+      .collect::<Vec<_>>(),
+  );
+
+  let orig_ctor_params: proc_macro2::TokenStream = orig_fields
+    .named
+    .iter()
+    .map(|field| {
+      let field_name = field.ident.as_ref().unwrap();
+      let field_ty = &field.ty;
+      if !field_skips.contains_key(field_name) {
+        quote! {
+            #field_name: #field_ty,
+        }
+      } else {
+        quote! {}
+      }
+    })
+    .collect();
+
+  let orig_ctor: proc_macro2::TokenStream = orig_fields
+    .named
+    .iter()
+    .map(|field| {
+      let field_name = field.ident.clone().unwrap();
+      if let Some(skipped_field) = field_skips.get(&field_name) {
+        quote! {#field_name: #skipped_field,}
+      } else {
+        quote! {#field_name,}
+      }
+    })
+    .collect();
+
+  // Build the output, possibly using quasi-quotation
+  let expanded = quote! {
+    impl #in_ty {
+      pub fn new(#orig_ctor_params) -> Self {
+        Self {
+          #orig_ctor
+        }
+      }
+    }
+  };
+
+  // Hand the output tokens back to the compiler
+  TokenStream::from(expanded)
+}
